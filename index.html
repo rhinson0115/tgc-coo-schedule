@@ -1,1 +1,875 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#1a3a2a">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="TGC Schedule">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+<title>TGC COO Schedule</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --forest: #1a3a2a;
+    --forest-mid: #243d30;
+    --forest-light: #2d5040;
+    --gold: #c9a84c;
+    --gold-light: #e8d5a3;
+    --gold-dim: rgba(201,168,76,0.3);
+    --cream: #f8f4ec;
+    --cream-dark: #ede8de;
+    --text-primary: #1a1a18;
+    --text-secondary: #4a4a42;
+    --text-muted: #8a8a7a;
+    --green-mid: #5a8a6a;
+    --white: #ffffff;
+    --safe-top: env(safe-area-inset-top, 0px);
+    --safe-bottom: env(safe-area-inset-bottom, 0px);
+  }
 
+  * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+  html, body {
+    height: 100%;
+    font-family: 'DM Sans', sans-serif;
+    background: var(--forest);
+    color: var(--white);
+    overflow-x: hidden;
+  }
+
+  /* ── APP SHELL ── */
+  .app-header {
+    background: var(--forest);
+    padding: calc(var(--safe-top) + 1rem) 1.25rem 1rem;
+    border-bottom: 0.5px solid rgba(201,168,76,0.2);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+
+  .app-header-inner {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    max-width: 680px;
+    margin: 0 auto;
+  }
+
+  .app-eyebrow {
+    font-size: 9px;
+    font-weight: 500;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--gold);
+    margin-bottom: 4px;
+  }
+
+  .app-title {
+    font-family: 'Cormorant Garamond', Georgia, serif;
+    font-size: 22px;
+    font-weight: 300;
+    color: var(--white);
+    line-height: 1.1;
+  }
+
+  .app-title em { font-style: italic; color: var(--gold-light); }
+
+  .progress-ring-wrap { text-align: right; }
+
+  .progress-label {
+    font-family: 'Cormorant Garamond', Georgia, serif;
+    font-size: 26px;
+    font-weight: 400;
+    color: var(--gold);
+    line-height: 1;
+  }
+
+  .progress-sub {
+    font-size: 9px;
+    color: rgba(255,255,255,0.3);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  /* ── TABS ── */
+  .tabs-wrap {
+    background: var(--forest);
+    padding: 0.75rem 1.25rem 0;
+    position: sticky;
+    top: calc(var(--safe-top) + 72px);
+    z-index: 99;
+    border-bottom: 0.5px solid rgba(255,255,255,0.06);
+  }
+
+  .tabs-inner {
+    display: flex;
+    gap: 4px;
+    max-width: 680px;
+    margin: 0 auto;
+    overflow-x: auto;
+    scrollbar-width: none;
+    padding-bottom: 0.75rem;
+  }
+
+  .tabs-inner::-webkit-scrollbar { display: none; }
+
+  .tab-btn {
+    font-size: 11px;
+    font-weight: 400;
+    padding: 5px 14px;
+    border-radius: 100px;
+    cursor: pointer;
+    border: 0.5px solid rgba(201,168,76,0.3);
+    color: rgba(255,255,255,0.4);
+    background: transparent;
+    white-space: nowrap;
+    font-family: 'DM Sans', sans-serif;
+    transition: all 0.18s;
+    flex-shrink: 0;
+  }
+
+  .tab-btn.active {
+    background: var(--gold);
+    color: var(--forest);
+    border-color: var(--gold);
+    font-weight: 500;
+  }
+
+  /* ── CONTENT ── */
+  .content {
+    max-width: 680px;
+    margin: 0 auto;
+    padding: 1.25rem 1.25rem calc(var(--safe-bottom) + 2rem);
+  }
+
+  .phase-block { display: none; }
+  .phase-block.visible { display: block; }
+
+  .phase-header {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 1rem;
+    flex-wrap: wrap;
+  }
+
+  .phase-badge {
+    font-size: 9px;
+    font-weight: 500;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    padding: 4px 12px;
+    border-radius: 100px;
+    background: rgba(201,168,76,0.12);
+    color: var(--gold);
+    border: 0.5px solid rgba(201,168,76,0.3);
+  }
+
+  .phase-dates { font-size: 12px; color: rgba(255,255,255,0.3); }
+  .phase-line { flex: 1; height: 0.5px; background: rgba(255,255,255,0.07); }
+  .phase-hrs { font-size: 11px; color: rgba(255,255,255,0.35); }
+
+  /* ── WEEK CARDS ── */
+  .week-list { display: flex; flex-direction: column; gap: 10px; }
+
+  .week-card {
+    background: rgba(255,255,255,0.04);
+    border: 0.5px solid rgba(255,255,255,0.08);
+    border-radius: 12px;
+    padding: 1rem 1.1rem;
+    transition: border-color 0.2s, background 0.2s;
+    cursor: pointer;
+  }
+
+  .week-card.done {
+    background: rgba(201,168,76,0.06);
+    border-color: rgba(201,168,76,0.25);
+  }
+
+  .week-card-top {
+    display: grid;
+    grid-template-columns: 72px 1fr auto;
+    gap: 0.75rem;
+    align-items: start;
+  }
+
+  .week-id {
+    font-family: 'Cormorant Garamond', Georgia, serif;
+    font-size: 13px;
+    color: var(--gold);
+    line-height: 1.3;
+    padding-top: 2px;
+  }
+
+  .week-id span {
+    display: block;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 10px;
+    color: rgba(255,255,255,0.22);
+    font-weight: 300;
+  }
+
+  .week-title {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--white);
+    margin-bottom: 3px;
+    line-height: 1.3;
+  }
+
+  .week-card.done .week-title {
+    color: rgba(255,255,255,0.5);
+    text-decoration: line-through;
+    text-decoration-color: rgba(201,168,76,0.4);
+  }
+
+  .week-body {
+    font-size: 12px;
+    font-weight: 300;
+    color: rgba(255,255,255,0.45);
+    line-height: 1.6;
+  }
+
+  .week-hrs {
+    font-family: 'Cormorant Garamond', Georgia, serif;
+    font-size: 18px;
+    color: rgba(201,168,76,0.55);
+    text-align: right;
+    line-height: 1;
+    padding-top: 2px;
+  }
+
+  .week-hrs span {
+    display: block;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 9px;
+    color: rgba(255,255,255,0.18);
+    text-align: right;
+    letter-spacing: 0.05em;
+  }
+
+  .week-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    margin-top: 8px;
+  }
+
+  .tag {
+    font-size: 9px;
+    font-weight: 500;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    padding: 2px 8px;
+    border-radius: 4px;
+  }
+
+  .tag-critical { background: rgba(201,168,76,0.15); color: var(--gold); }
+  .tag-shared { background: rgba(255,255,255,0.06); color: rgba(255,255,255,0.4); }
+  .tag-build { background: rgba(56,120,80,0.22); color: #7ec99a; }
+  .tag-legal { background: rgba(120,80,160,0.18); color: #c4a0e8; }
+
+  /* ── CHECK BUTTON ── */
+  .check-btn {
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    border: 1.5px solid rgba(201,168,76,0.35);
+    background: transparent;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    cursor: pointer;
+    transition: all 0.18s;
+    margin-top: 1px;
+  }
+
+  .check-btn svg {
+    width: 12px;
+    height: 12px;
+    opacity: 0;
+    transition: opacity 0.18s;
+  }
+
+  .week-card.done .check-btn {
+    background: var(--gold);
+    border-color: var(--gold);
+  }
+
+  .week-card.done .check-btn svg { opacity: 1; }
+
+  /* ── NOTES ── */
+  .notes-toggle {
+    font-size: 11px;
+    color: rgba(255,255,255,0.3);
+    margin-top: 10px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    user-select: none;
+    width: fit-content;
+  }
+
+  .notes-toggle:hover { color: var(--gold); }
+
+  .notes-toggle .arrow {
+    font-size: 9px;
+    transition: transform 0.18s;
+  }
+
+  .notes-toggle.open .arrow { transform: rotate(90deg); }
+
+  .notes-area {
+    display: none;
+    margin-top: 8px;
+  }
+
+  .notes-area.open { display: block; }
+
+  .notes-input {
+    width: 100%;
+    background: rgba(255,255,255,0.04);
+    border: 0.5px solid rgba(255,255,255,0.1);
+    border-radius: 8px;
+    padding: 0.6rem 0.75rem;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 12px;
+    font-weight: 300;
+    color: rgba(255,255,255,0.7);
+    resize: none;
+    min-height: 64px;
+    outline: none;
+    transition: border-color 0.18s;
+  }
+
+  .notes-input:focus { border-color: rgba(201,168,76,0.4); }
+  .notes-input::placeholder { color: rgba(255,255,255,0.2); }
+
+  /* ── SUMMARY VIEW ── */
+  .summary-phases { display: flex; flex-direction: column; gap: 10px; margin-bottom: 1.5rem; }
+
+  .summary-card {
+    background: rgba(255,255,255,0.04);
+    border: 0.5px solid rgba(255,255,255,0.08);
+    border-radius: 12px;
+    padding: 1rem 1.1rem;
+    display: grid;
+    grid-template-columns: 72px 1fr auto;
+    gap: 0.75rem;
+    align-items: center;
+  }
+
+  .summary-phase-label {
+    font-family: 'Cormorant Garamond', Georgia, serif;
+    font-size: 13px;
+    color: var(--gold);
+    line-height: 1.3;
+  }
+
+  .summary-phase-label span {
+    display: block;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 10px;
+    color: rgba(255,255,255,0.22);
+    font-weight: 300;
+  }
+
+  .summary-phase-name {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--white);
+    margin-bottom: 3px;
+  }
+
+  .summary-phase-detail {
+    font-size: 11px;
+    font-weight: 300;
+    color: rgba(255,255,255,0.35);
+    line-height: 1.5;
+  }
+
+  .summary-progress-wrap { text-align: right; }
+
+  .summary-progress-num {
+    font-family: 'Cormorant Garamond', Georgia, serif;
+    font-size: 20px;
+    color: var(--gold);
+    line-height: 1;
+  }
+
+  .summary-progress-label {
+    font-size: 9px;
+    color: rgba(255,255,255,0.25);
+    letter-spacing: 0.06em;
+  }
+
+  .progress-bar-bg {
+    height: 3px;
+    background: rgba(255,255,255,0.06);
+    border-radius: 2px;
+    margin-top: 6px;
+    overflow: hidden;
+  }
+
+  .progress-bar-fill {
+    height: 3px;
+    background: var(--gold);
+    border-radius: 2px;
+    transition: width 0.4s ease;
+  }
+
+  /* ── STATS BAR ── */
+  .stats-bar {
+    display: grid;
+    grid-template-columns: repeat(4,1fr);
+    gap: 8px;
+    margin-top: 1.5rem;
+    padding-top: 1.5rem;
+    border-top: 0.5px solid rgba(255,255,255,0.07);
+  }
+
+  .stat-card {
+    background: rgba(255,255,255,0.03);
+    border: 0.5px solid rgba(255,255,255,0.06);
+    border-radius: 10px;
+    padding: 0.75rem 0.5rem;
+    text-align: center;
+  }
+
+  .stat-num {
+    font-family: 'Cormorant Garamond', Georgia, serif;
+    font-size: 22px;
+    color: var(--gold);
+    line-height: 1;
+    margin-bottom: 4px;
+  }
+
+  .stat-label {
+    font-size: 8px;
+    color: rgba(255,255,255,0.25);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  @media (max-width: 400px) {
+    .week-card-top { grid-template-columns: 60px 1fr auto; }
+    .stats-bar { grid-template-columns: repeat(2,1fr); }
+  }
+</style>
+</head>
+<body>
+
+<div class="app-header">
+  <div class="app-header-inner">
+    <div>
+      <div class="app-eyebrow">The Growth Club · COO</div>
+      <div class="app-title">Work <em>Schedule</em></div>
+    </div>
+    <div class="progress-ring-wrap">
+      <div class="progress-label" id="global-pct">0%</div>
+      <div class="progress-sub">Complete</div>
+    </div>
+  </div>
+</div>
+
+<div class="tabs-wrap">
+  <div class="tabs-inner">
+    <button class="tab-btn active" onclick="showTab(0)">Phase 1 · Foundation</button>
+    <button class="tab-btn" onclick="showTab(1)">Phase 2 · Build</button>
+    <button class="tab-btn" onclick="showTab(2)">Phase 3 · Launch Prep</button>
+    <button class="tab-btn" onclick="showTab(3)">Phase 4 · Launch</button>
+    <button class="tab-btn" onclick="showTab(4)">Summary</button>
+  </div>
+</div>
+
+<div class="content">
+
+  <!-- PHASE 1 -->
+  <div class="phase-block visible" id="tab-0">
+    <div class="phase-header">
+      <div class="phase-badge">Phase 1 · Foundation</div>
+      <div class="phase-dates">Mar 18 – Apr 6</div>
+      <div class="phase-line"></div>
+      <div class="phase-hrs">45 hrs</div>
+    </div>
+    <div class="week-list" id="phase-1-list"></div>
+  </div>
+
+  <!-- PHASE 2 -->
+  <div class="phase-block" id="tab-1">
+    <div class="phase-header">
+      <div class="phase-badge">Phase 2 · Build</div>
+      <div class="phase-dates">Apr 7 – May 4</div>
+      <div class="phase-line"></div>
+      <div class="phase-hrs">60 hrs</div>
+    </div>
+    <div class="week-list" id="phase-2-list"></div>
+  </div>
+
+  <!-- PHASE 3 -->
+  <div class="phase-block" id="tab-2">
+    <div class="phase-header">
+      <div class="phase-badge">Phase 3 · Launch Prep</div>
+      <div class="phase-dates">May 5 – Jun 1</div>
+      <div class="phase-line"></div>
+      <div class="phase-hrs">60 hrs</div>
+    </div>
+    <div class="week-list" id="phase-3-list"></div>
+  </div>
+
+  <!-- PHASE 4 -->
+  <div class="phase-block" id="tab-3">
+    <div class="phase-header">
+      <div class="phase-badge">Phase 4 · Launch</div>
+      <div class="phase-dates">Jun 2 – Jul 2026</div>
+      <div class="phase-line"></div>
+      <div class="phase-hrs">75 hrs</div>
+    </div>
+    <div class="week-list" id="phase-4-list"></div>
+  </div>
+
+  <!-- SUMMARY -->
+  <div class="phase-block" id="tab-4">
+    <div class="phase-header">
+      <div class="phase-badge">Full Summary</div>
+      <div class="phase-dates">Mar 18 – Jul 2026</div>
+      <div class="phase-line"></div>
+    </div>
+    <div class="summary-phases" id="summary-list"></div>
+    <div class="stats-bar">
+      <div class="stat-card">
+        <div class="stat-num">16</div>
+        <div class="stat-label">Weeks Total</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-num">240</div>
+        <div class="stat-label">Total Hours</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-num">15</div>
+        <div class="stat-label">Hrs / Week</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-num">Q3</div>
+        <div class="stat-label">Launch Target</div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+const WEEKS = [
+  // Phase 1
+  {
+    phase: 1,
+    id: 'w1',
+    label: 'Week 1',
+    dates: 'Mar 18–24',
+    title: 'Curriculum Framework',
+    body: 'Finalize philosophical tenets, four-book supplementary list, and the six-month structural arc. Draft the agent synthesis prompt alongside — same intellectual work. Bring Claude into the full session.',
+    hrs: 15,
+    tags: [['Critical Path','critical'],['+ Donni','shared']]
+  },
+  {
+    phase: 1,
+    id: 'w2',
+    label: 'Week 2',
+    dates: 'Mar 25–31',
+    title: 'Member Experience Map',
+    body: 'Map exactly how a cohort member moves through six months. Week-by-week touchpoints, interactions, deliverables. This becomes the app blueprint and the offer description simultaneously.',
+    hrs: 15,
+    tags: [['+ Donni','shared']]
+  },
+  {
+    phase: 1,
+    id: 'w3',
+    label: 'Week 3',
+    dates: 'Apr 1–6',
+    title: 'Legal & Financial Setup',
+    body: 'QuickBooks, Chart of Accounts, Stripe/PayPal, financial SOP. Member agreement, Terms of Service, privacy policy, trademark search initiation. Attorney review of operating agreement this week — not later.',
+    hrs: 15,
+    tags: [['Legal','legal'],['COO Owned','critical']]
+  },
+  // Phase 2
+  {
+    phase: 2,
+    id: 'w4',
+    label: 'Week 4',
+    dates: 'Apr 7–13',
+    title: 'App Scope & Platform Decision',
+    body: 'Evaluate Bolt.new vs Glide vs alternatives against confirmed feature requirements. Make final platform decision. No building yet — scoping only. Curriculum must be finalized before this week begins.',
+    hrs: 15,
+    tags: [['Tech','build'],['COO Owned','critical']]
+  },
+  {
+    phase: 2,
+    id: 'w5',
+    label: 'Week 5',
+    dates: 'Apr 14–20',
+    title: 'App Build — Part 1',
+    body: 'Core architecture — module delivery, member onboarding flow, progress tracking, entrepreneurial profile agent integration. Skeleton functional by end of week.',
+    hrs: 15,
+    tags: [['Build','build']]
+  },
+  {
+    phase: 2,
+    id: 'w6',
+    label: 'Week 6',
+    dates: 'Apr 21–27',
+    title: 'App Build — Part 2',
+    body: 'Community component, touchpoint integrations, midpoint and completion session logistics. Full cohort experience functional end to end.',
+    hrs: 15,
+    tags: [['Build','build']]
+  },
+  {
+    phase: 2,
+    id: 'w7',
+    label: 'Week 7',
+    dates: 'Apr 28–May 4',
+    title: 'App Testing & Operations Setup',
+    body: 'Test full cohort experience as a member. Find every break, gap, and friction point. Set up Notion HQ, email tagging, onboarding SOPs, internal operating policies.',
+    hrs: 15,
+    tags: [['COO Owned','critical']]
+  },
+  // Phase 3
+  {
+    phase: 3,
+    id: 'w8',
+    label: 'Week 8',
+    dates: 'May 5–11',
+    title: 'Pricing & Offer Finalization',
+    body: 'With real product built and tested — price it accurately. Cohort size, pricing tiers, first cohort discount strategy framed as data acquisition, payment structure, revenue model. Full session with Claude.',
+    hrs: 15,
+    tags: [['COO Owned','critical'],['+ Donni','shared']]
+  },
+  {
+    phase: 3,
+    id: 'w9',
+    label: 'Week 9',
+    dates: 'May 12–18',
+    title: 'Cohort Application & Intake Design',
+    body: 'Build the application process that screens for Avatar 4 specifically. Behavioral screening — not just income. Investing habits, peer dynamics, expansion mindset. Quality control for cohort culture.',
+    hrs: 15,
+    tags: [['COO Owned','critical']]
+  },
+  {
+    phase: 3,
+    id: 'w10',
+    label: 'Week 10',
+    dates: 'May 19–25',
+    title: 'Systems Lock-In',
+    body: 'Checkout flow, payment processing, welcome sequence, member onboarding, CRM. Every system a cohort member touches from payment through day one — tested and confirmed.',
+    hrs: 15,
+    tags: [['Systems','build'],['COO Owned','critical']]
+  },
+  {
+    phase: 3,
+    id: 'w11',
+    label: 'Week 11',
+    dates: 'May 26–Jun 1',
+    title: 'Pre-Launch Nurture — Your Contribution',
+    body: 'Behind-the-scenes content, philosophy previews, social posting. Coordinate content calendar with Donni. Your role — show up as a founder voice, not just operator. Depth of thinking is the marketing.',
+    hrs: 15,
+    tags: [['Shared','shared']]
+  },
+  // Phase 4
+  {
+    phase: 4,
+    id: 'w12',
+    label: 'Wks 12–13',
+    dates: 'Jun 2–15',
+    title: 'Pre-Launch Hype',
+    body: 'IG Lives, Q&A sessions, waitlist activation, DM outreach to warmest leads. Coordinate closely with Donni. Your role — systems support and founder presence. Think out loud publicly.',
+    hrs: 30,
+    tags: [['Shared','shared']]
+  },
+  {
+    phase: 4,
+    id: 'w14',
+    label: 'Week 14',
+    dates: 'Jun 16–22',
+    title: 'Launch Week',
+    body: 'Open enrollment. Post daily. Respond to DMs. Run objections content. Send launch emails. Plan for 20 hrs this week — this is the exception to the 15hr rule. Everything else clears.',
+    hrs: 20,
+    tags: [['All Hands','critical']]
+  },
+  {
+    phase: 4,
+    id: 'w15',
+    label: 'Week 15',
+    dates: 'Jun 23–29',
+    title: 'Cart Close & Onboarding Prep',
+    body: 'Final enrollment push, confirm member roster, finalize cohort onboarding sequence, prep first session logistics. Transition from builder mode to operator mode begins here.',
+    hrs: 15,
+    tags: [['COO Owned','critical']]
+  },
+  {
+    phase: 4,
+    id: 'w16',
+    label: 'Week 16',
+    dates: 'Jun 30–Jul 6',
+    title: 'Buffer & Contingency',
+    body: 'Intentionally protected. Things will slip. Systems will break. Members will have questions. This week absorbs the unexpected without derailing the launch. Do not fill it in advance.',
+    hrs: 10,
+    tags: [['Protected','shared']]
+  },
+];
+
+const PHASE_SUMMARY = [
+  { label: 'Phase 1', sub: 'Wks 1–3', name: 'Foundation', detail: 'Curriculum framework · Member experience map · Legal & financial setup · Agent synthesis prompt draft', dates: 'Mar 18 – Apr 6', hrs: 45 },
+  { label: 'Phase 2', sub: 'Wks 4–7', name: 'Build', detail: 'App scope & platform decision · App build Parts 1 & 2 · Testing · Operations infrastructure', dates: 'Apr 7 – May 4', hrs: 60 },
+  { label: 'Phase 3', sub: 'Wks 8–11', name: 'Launch Prep', detail: 'Pricing & offer · Cohort intake design · Systems lock-in · Pre-launch nurture content', dates: 'May 5 – Jun 1', hrs: 60 },
+  { label: 'Phase 4', sub: 'Wks 12–16', name: 'Launch', detail: 'Pre-launch hype · Enrollment week · Cart close · Onboarding prep · Contingency buffer', dates: 'Jun 2 – Jul 6', hrs: 75 },
+];
+
+// ── STATE ──
+let state = JSON.parse(localStorage.getItem('tgc-schedule') || '{}');
+
+function saveState() {
+  localStorage.setItem('tgc-schedule', JSON.stringify(state));
+}
+
+function getWeekState(id) {
+  return state[id] || { done: false, notes: '' };
+}
+
+// ── RENDER ──
+function buildWeekCard(week) {
+  const ws = getWeekState(week.id);
+  const card = document.createElement('div');
+  card.className = 'week-card' + (ws.done ? ' done' : '');
+  card.id = 'card-' + week.id;
+
+  const tagsHtml = week.tags.map(([label, type]) =>
+    `<span class="tag tag-${type}">${label}</span>`
+  ).join('');
+
+  card.innerHTML = `
+    <div class="week-card-top">
+      <div class="week-id">${week.label}<span>${week.dates}</span></div>
+      <div>
+        <div class="week-title">${week.title}</div>
+        <div class="week-body">${week.body}</div>
+        <div class="week-tags">${tagsHtml}</div>
+      </div>
+      <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px;">
+        <button class="check-btn" onclick="toggleDone('${week.id}', event)" title="Mark complete">
+          <svg viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M2 6L5 9L10 3" stroke="#1a3a2a" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </button>
+        <div class="week-hrs">${week.hrs}<span>hrs</span></div>
+      </div>
+    </div>
+    <div class="notes-toggle" onclick="toggleNotes('${week.id}', this)">
+      <span class="arrow">▶</span> Notes${ws.notes ? ' ·' : ''}
+      <span style="color:var(--gold);font-size:11px;">${ws.notes ? ' saved' : ''}</span>
+    </div>
+    <div class="notes-area" id="notes-area-${week.id}">
+      <textarea class="notes-input" placeholder="Add notes for this week..." oninput="saveNotes('${week.id}', this.value)">${ws.notes || ''}</textarea>
+    </div>
+  `;
+
+  return card;
+}
+
+function renderPhases() {
+  for (let p = 1; p <= 4; p++) {
+    const list = document.getElementById(`phase-${p}-list`);
+    list.innerHTML = '';
+    WEEKS.filter(w => w.phase === p).forEach(w => {
+      list.appendChild(buildWeekCard(w));
+    });
+  }
+  renderSummary();
+  updateGlobalProgress();
+}
+
+function renderSummary() {
+  const el = document.getElementById('summary-list');
+  el.innerHTML = '';
+  PHASE_SUMMARY.forEach((ph, i) => {
+    const phaseWeeks = WEEKS.filter(w => w.phase === i + 1);
+    const done = phaseWeeks.filter(w => getWeekState(w.id).done).length;
+    const total = phaseWeeks.length;
+    const pct = total ? Math.round((done / total) * 100) : 0;
+
+    const card = document.createElement('div');
+    card.className = 'summary-card';
+    card.innerHTML = `
+      <div class="summary-phase-label">${ph.label}<span>${ph.sub}</span></div>
+      <div>
+        <div class="summary-phase-name">${ph.name}</div>
+        <div class="summary-phase-detail">${ph.detail}</div>
+        <div class="progress-bar-bg"><div class="progress-bar-fill" style="width:${pct}%"></div></div>
+      </div>
+      <div class="summary-progress-wrap">
+        <div class="summary-progress-num">${done}/${total}</div>
+        <div class="summary-progress-label">weeks done</div>
+      </div>
+    `;
+    el.appendChild(card);
+  });
+}
+
+function updateGlobalProgress() {
+  const done = WEEKS.filter(w => getWeekState(w.id).done).length;
+  const pct = Math.round((done / WEEKS.length) * 100);
+  document.getElementById('global-pct').textContent = pct + '%';
+}
+
+// ── INTERACTIONS ──
+function toggleDone(id, e) {
+  e.stopPropagation();
+  const ws = getWeekState(id);
+  ws.done = !ws.done;
+  state[id] = ws;
+  saveState();
+
+  const card = document.getElementById('card-' + id);
+  card.classList.toggle('done', ws.done);
+  updateGlobalProgress();
+  renderSummary();
+}
+
+function toggleNotes(id, toggleEl) {
+  const area = document.getElementById('notes-area-' + id);
+  const isOpen = area.classList.toggle('open');
+  toggleEl.classList.toggle('open', isOpen);
+}
+
+function saveNotes(id, value) {
+  const ws = getWeekState(id);
+  ws.notes = value;
+  state[id] = ws;
+  saveState();
+}
+
+function showTab(idx) {
+  document.querySelectorAll('.phase-block').forEach((b, i) => {
+    b.classList.toggle('visible', i === idx);
+  });
+  document.querySelectorAll('.tab-btn').forEach((t, i) => {
+    t.classList.toggle('active', i === idx);
+  });
+  if (idx === 4) renderSummary();
+}
+
+// ── INIT ──
+renderPhases();
+</script>
+
+<script>
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('sw.js');
+}
+</script>
+
+</body>
+</html>
