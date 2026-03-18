@@ -1,16 +1,6 @@
-const CACHE = 'tgc-schedule-v2';
-const ASSETS = [
-  './',
-  './index.html',
-  './manifest.json',
-  './icons/icon-192.png',
-  './icons/icon-512.png'
-];
+const CACHE = 'tgc-schedule-v3';
 
 self.addEventListener('install', e => {
-  e.waitUntil(
-    caches.open(CACHE).then(cache => cache.addAll(ASSETS))
-  );
   self.skipWaiting();
 });
 
@@ -24,7 +14,5 @@ self.addEventListener('activate', e => {
 });
 
 self.addEventListener('fetch', e => {
-  e.respondWith(
-    caches.match(e.request).then(cached => cached || fetch(e.request).catch(() => caches.match('./index.html')))
-  );
+  e.respondWith(fetch(e.request).catch(() => caches.match(e.request)));
 });
